@@ -18,7 +18,7 @@ Welcome to **Kabutar**, a simple and secure messaging web app that lets you chat
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/kabutar.git
+   git clone https://github.com/not-tarunnn/kabutar.git
    ```
 
 2. Navigate to the project folder:
