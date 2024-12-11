@@ -24,14 +24,15 @@
             </div>
         </div>
     </div>
+
     <script>
         let ws;
 
         function joinRoom() {
             const code = document.getElementById('roomCode').value;
 
-            // Create WebSocket connection to Render server
-            ws = new WebSocket(`wss://not-tarunnn.onrender.com`);
+            // Create WebSocket connection to your Render server
+            ws = new WebSocket(`wss://kabutar.onrender.com`);  // Replace with your Render WebSocket URL
 
             ws.onopen = () => {
                 ws.send(JSON.stringify({ type: 'join', code }));
@@ -40,6 +41,7 @@
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 const messages = document.getElementById('messages');
+                
                 if (data.type === 'info') {
                     document.getElementById('chatBox').classList.remove('hidden');
                 } else if (data.type === 'history') {

@@ -8,12 +8,13 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Serve the client-side code
+// Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Store rooms with users and messages
 const rooms = {}; // { roomCode: { users: [], messages: [] } }
 
+// Handle WebSocket connections
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const data = JSON.parse(message);
@@ -28,6 +29,7 @@ wss.on('connection', (ws) => {
             // Send chat history to the user
             ws.send(JSON.stringify({ type: 'history', messages: rooms[code].messages }));
 
+            // Notify the user that they joined the room
             ws.send(JSON.stringify({ type: 'info', text: `Joined room ${code}` }));
         } else if (type === 'message') {
             // Save the message and broadcast to all in the room
@@ -57,7 +59,12 @@ wss.on('connection', (ws) => {
     });
 });
 
-// Render requires specifying the port from an environment variable
+// Handle errors gracefully
+server.on('error', (err) => {
+    console.error('Server error:', err);
+});
+
+// Set the port to the environment variable provided by Render
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
