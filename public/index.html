@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kabutar</title>
+    <title>Kabutar - Video & Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
-      <!-- Favicon -->
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
     
     <style>
@@ -27,7 +27,7 @@
         }
 
         #localVideo, #remoteVideo {
-            width: 50%;
+            width: 60%;
             border: 2px solid #ddd;
         }
 
@@ -53,37 +53,34 @@
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-7xl grid grid-cols-2 gap-4">
+    <div class="chat-container w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Chat Section -->
         <div class="chat-container w-full flex flex-col">
-            <h1 class="text-2xl font-bold text-center mb-4">Chatbox</h1>
-            <div id="chatBox">
+            <div class="mb-4">
+                <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
+            </div>
+            <div class="text-center mb-4">
+                <button onclick="joinRoom()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Join Room</button>
+            </div>
+            <div id="chatBox" class="hidden">
                 <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
                 <div class="flex">
-                    <input 
-                        id="messageInput" 
-                        class="flex-grow p-2 border rounded-l" 
-                        placeholder="Type a message" 
-                        onkeydown="handleEnterKey(event)" />
-                    <button 
-                        onclick="sendMessage()" 
-                        class="px-4 py-2 bg-green-500 text-white rounded-r hover:bg-green-600 transition-all duration-200">
-                        Send
-                    </button>
+                    <input id="messageInput" class="flex-grow p-2 border rounded-l" placeholder="Type a message" />
+                    <button onclick="sendMessage()" class="px-4 py-2 bg-green-500 text-white rounded-r hover:bg-green-600 transition-all duration-200">Send</button>
                 </div>
             </div>
         </div>
 
         <!-- Video Section -->
         <div class="flex flex-col items-center justify-center">
-            <h1 class="text-2xl font-bold text-center mb-4">Video</h1>
-            <div id="videoChatBox" class="w-full flex justify-end mb-4">
-                <div id="videos" class="w-4/5 flex flex-col">
-                    <video id="localVideo" autoplay muted class="rounded-lg mb-4"></video>
+            <h1 class="text-2xl font-bold text-center mb-4">Kabutar</h1>
+            <div id="videoChatBox" class="w-full flex justify-center mb-4">
+                <div id="videos" class="flex justify-between w-full md:w-4/5">
+                    <video id="localVideo" autoplay muted class="rounded-lg"></video>
                     <video id="remoteVideo" autoplay class="rounded-lg"></video>
                 </div>
             </div>
-            <div id="controls" class="flex justify-end gap-4">
+            <div id="controls" class="flex justify-center gap-4">
                 <button id="cameraOffBtn" onclick="toggleCamera()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Turn Camera Off</button>
                 <button id="micOffBtn" onclick="toggleMic()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Turn Mic Off</button>
             </div>
@@ -105,6 +102,10 @@
 
         function joinRoom() {
             const code = document.getElementById('roomCode').value;
+            if (!code || code.length !== 6) {
+                alert("Please enter a valid 6-digit code!");
+                return;
+            }
 
             ws = new WebSocket(`wss://kabutar.onrender.com`);
 
@@ -116,6 +117,8 @@
                 const data = JSON.parse(event.data);
 
                 if (data.type === 'info') {
+                    document.getElementById('chatBox').classList.remove('hidden');
+                    document.getElementById('videoChatBox').classList.remove('hidden');
                     startVideoCall();
                 } else if (data.type === 'message') {
                     appendMessage(data.text, data.sender, data.id);
@@ -171,12 +174,7 @@
             const message = document.getElementById('messageInput').value;
             if (message) {
                 const msgId = messageId++;
-                const messageData = {
-                    type: 'message',
-                    text: message,
-                    id: msgId
-                };
-                ws.send(JSON.stringify(messageData));
+                ws.send(JSON.stringify({ type: 'message', text: message, id: msgId }));
                 appendMessage(message, 'You', msgId);
                 document.getElementById('messageInput').value = '';
             }
@@ -185,20 +183,8 @@
         function appendMessage(text, sender, id) {
             const messageElem = document.createElement('div');
             messageElem.classList.add('message');
-            messageElem.innerHTML = `
-                <strong>${sender}</strong>: ${text}
-            `;
+            messageElem.innerHTML = `<strong>${sender}</strong>: ${text}`;
             messagesContainer.appendChild(messageElem);
-            scrollToBottom();
-        }
-
-        function handleEnterKey(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        }
-
-        function scrollToBottom() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
     </script>
