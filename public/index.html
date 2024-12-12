@@ -6,9 +6,30 @@
     <title>Kabutar - Simple Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6676209672905473"
+     crossorigin="anonymous"></script>
+    <style>
+        /* Set the background image to the local GIF file */
+        body {
+            background-image: url('background.gif'); /* Reference the GIF in the same folder */
+            background-size: cover; /* Make the GIF cover the whole page */
+            background-position: center; /* Center the GIF */
+            background-repeat: no-repeat; /* Prevent the GIF from repeating */
+            background-attachment: fixed; /* Make the background stay fixed while scrolling */
+        }
+
+        /* Add some styles to make the chat box stand out from the background */
+        .chat-container {
+            background-color: rgba(255, 255, 255, 0.8); /* Add transparency to the container */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-md p-4 bg-white rounded-lg shadow-md">
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="chat-container w-full max-w-md">
         <h1 class="text-2xl font-bold text-center mb-4">Kabutar - Simple Chat</h1>
         <div class="mb-4">
             <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
