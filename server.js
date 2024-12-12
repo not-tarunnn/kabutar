@@ -28,19 +28,27 @@ wss.on('connection', (ws) => {
             // Send chat history to the user
             ws.send(JSON.stringify({ type: 'history', messages: rooms[code].messages }));
 
+            // Notify all users that a new user has joined
+            const joinMessage = `User ${ws._socket.remoteAddress} has joined the room.`;
+            rooms[code].users.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN && client !== ws) {
+                    client.send(JSON.stringify({ type: 'message', text: joinMessage, sender: 'system' }));
+                }
+            });
+
             // Notify the user that they joined the room
             ws.send(JSON.stringify({ type: 'info', text: `Joined room ${code}` }));
         } else if (type === 'message') {
-            // Save the message and broadcast to all in the room
+            // Save the message and broadcast to all users except the sender
             const room = rooms[ws.roomCode];
             if (room) {
                 const messageObject = { text, sender: 'self' };
                 room.messages.push(messageObject);
 
                 room.users.forEach((client) => {
-                    if (client.readyState === WebSocket.OPEN) {
+                    if (client.readyState === WebSocket.OPEN && client !== ws) {
                         client.send(
-                            JSON.stringify({ type: 'message', text, sender: ws === client ? 'self' : 'other' })
+                            JSON.stringify({ type: 'message', text, sender: 'other' })
                         );
                     }
                 });
@@ -53,7 +61,18 @@ wss.on('connection', (ws) => {
         const room = rooms[ws.roomCode];
         if (room) {
             room.users = room.users.filter((client) => client !== ws);
-            if (room.users.length === 0) delete rooms[ws.roomCode];
+
+            // Notify others that the user left the room
+            if (room.users.length > 0) {
+                const leaveMessage = `User ${ws._socket.remoteAddress} has left the room.`;
+                room.users.forEach((client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ type: 'message', text: leaveMessage, sender: 'system' }));
+                    }
+                });
+            } else {
+                delete rooms[ws.roomCode]; // Clean up room if no users are left
+            }
         }
     });
 });
