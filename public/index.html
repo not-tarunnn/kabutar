@@ -91,7 +91,7 @@
     </div>
 
     <script>
-        let ws, localStream, peerConnection, username;
+        let ws, localStream, peerConnection, username, userId;
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
         const cameraOffBtn = document.getElementById('cameraOffBtn');
@@ -103,6 +103,10 @@
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
 
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9);
+        }
+
         function joinRoom() {
             username = document.getElementById('username').value;
             const code = document.getElementById('roomCode').value;
@@ -112,10 +116,12 @@
                 return;
             }
 
+            userId = generateUserId(); // Generate a unique ID for the user
+
             ws = new WebSocket(`wss://kabutar.onrender.com`);
 
             ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'join', code, username }));
+                ws.send(JSON.stringify({ type: 'join', code, username, userId }));
             };
 
             ws.onmessage = (event) => {
@@ -126,7 +132,7 @@
                     document.getElementById('videoChatBox').classList.remove('hidden');
                     startVideoCall();
                 } else if (data.type === 'message') {
-                    appendMessage(data.text, data.sender, data.id);
+                    appendMessage(data.text, data.sender, data.userId, data.id);
                 }
             };
 
@@ -184,34 +190,24 @@
                     type: 'message',
                     text: message,
                     sender: username,
+                    userId: userId, // Include the unique ID
                     id: msgId
                 };
                 ws.send(JSON.stringify(messageData));
 
                 // Append the message to the UI on your side only
-                appendMessage(message, 'You', msgId);
+                appendMessage(message, 'You', userId, msgId);
                 document.getElementById('messageInput').value = '';
             }
         }
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-
-            if (data.type === 'message') {
-                // Append the received message from the server only if it's not from your side
-                if (data.sender !== username) {
-                    appendMessage(data.text, data.sender, data.id);
-                }
-            }
-        };
-
-        function appendMessage(text, sender, id) {
+        function appendMessage(text, sender, userId, id) {
             const messageElem = document.createElement('div');
             messageElem.classList.add('message');
             
             // Add the sender's name and message text
             messageElem.innerHTML = `
-                <strong>${sender}</strong>: ${text}
+                <strong>${sender} (${userId})</strong>: ${text}
             `;
             
             // Append the message to the messages container
