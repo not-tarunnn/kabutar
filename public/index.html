@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kabutar - Simple Chat</title>
+    <title>Kabutar - Simple Chat with Video</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6676209672905473"
-     crossorigin="anonymous"></script>
+    
     <style>
         /* Set the background image to the local GIF file */
         body {
@@ -25,18 +24,47 @@
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
+        #localVideo, #remoteVideo {
+            width: 45%;
+            margin: 10px;
+            border: 2px solid #ddd;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
     <div class="chat-container w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-4">Kabutar - Simple Chat</h1>
+        <h1 class="text-2xl font-bold text-center mb-4">Kabutar - Simple Chat with Video</h1>
+
+        <!-- Room Code Input -->
         <div class="mb-4">
             <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
         </div>
         <div class="text-center mb-4">
             <button onclick="joinRoom()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Join Room</button>
         </div>
+
+        <!-- Video Chat Section -->
+        <div id="videoChatBox" class="hidden">
+            <div id="videos" class="flex justify-between">
+                <video id="localVideo" autoplay muted></video>
+                <video id="remoteVideo" autoplay></video>
+            </div>
+            <div id="controls">
+                <button id="cameraOffBtn" onclick="toggleCamera()">Turn Camera Off</button>
+                <button id="micOffBtn" onclick="toggleMic()">Turn Mic Off</button>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
         <div id="chatBox" class="hidden">
             <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
             <div class="flex">
@@ -47,13 +75,21 @@
     </div>
 
     <script>
-        let ws;
+        let ws, localStream, peerConnection;
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const cameraOffBtn = document.getElementById('cameraOffBtn');
+        const micOffBtn = document.getElementById('micOffBtn');
+
+        const configuration = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
 
         function joinRoom() {
             const code = document.getElementById('roomCode').value;
 
             // Create WebSocket connection to your Render server
-            ws = new WebSocket(`wss://kabutar.onrender.com`);  // Replace with your Render WebSocket URL
+            ws = new WebSocket(`wss://kabutar.onrender.com`); // Replace with your WebSocket URL
 
             ws.onopen = () => {
                 ws.send(JSON.stringify({ type: 'join', code }));
@@ -62,9 +98,11 @@
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 const messages = document.getElementById('messages');
-                
+
                 if (data.type === 'info') {
                     document.getElementById('chatBox').classList.remove('hidden');
+                    document.getElementById('videoChatBox').classList.remove('hidden');
+                    startVideoCall();
                 } else if (data.type === 'history') {
                     messages.innerHTML = '';
                     data.messages.forEach((msg) => {
@@ -88,6 +126,48 @@
                 console.log('WebSocket connection closed');
                 alert('Connection closed. Please refresh the page to reconnect.');
             };
+        }
+
+        async function startVideoCall() {
+            // Get the local media stream (video and audio)
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true
+            });
+
+            localVideo.srcObject = localStream;
+
+            // Initialize peer connection
+            peerConnection = new RTCPeerConnection(configuration);
+
+            // Add local stream tracks to peer connection
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            // When remote stream is added, display it
+            peerConnection.ontrack = (event) => {
+                remoteVideo.srcObject = event.streams[0];
+            };
+
+            // Create an offer to initiate the call
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            // Send the offer to the remote peer via WebSocket
+            ws.send(JSON.stringify({ type: 'offer', offer }));
+        }
+
+        // Toggle camera on/off
+        function toggleCamera() {
+            const tracks = localStream.getVideoTracks();
+            tracks.forEach(track => track.enabled = !track.enabled);
+            cameraOffBtn.textContent = tracks[0].enabled ? 'Turn Camera Off' : 'Turn Camera On';
+        }
+
+        // Toggle mic on/off
+        function toggleMic() {
+            const tracks = localStream.getAudioTracks();
+            tracks.forEach(track => track.enabled = !track.enabled);
+            micOffBtn.textContent = tracks[0].enabled ? 'Turn Mic Off' : 'Turn Mic On';
         }
 
         function sendMessage() {
