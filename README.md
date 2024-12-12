@@ -1,7 +1,3 @@
-Got it! Here's a simpler, more basic README for the initial phase of your messaging web app, **Kabutar**:
-
----
-
 # Kabutar 🚀🕊️
 
 Welcome to **Kabutar**, a simple and secure messaging web app that lets you chat with friends and family. Whether it's a quick hello or a longer conversation, Kabutar makes it easy to stay in touch! 💬
