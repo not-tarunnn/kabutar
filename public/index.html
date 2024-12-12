@@ -170,23 +170,52 @@
             micOffBtn.textContent = tracks[0].enabled ? 'Turn Mic Off' : 'Turn Mic On';
         }
 
-        function sendMessage() {
-            const message = document.getElementById('messageInput').value;
-            if (message) {
-                const msgId = messageId++;
-                ws.send(JSON.stringify({ type: 'message', text: message, id: msgId }));
-                appendMessage(message, 'You', msgId);
-                document.getElementById('messageInput').value = '';
-            }
+       function sendMessage() {
+    const message = document.getElementById('messageInput').value;
+    if (message) {
+        const msgId = messageId++;
+        // Send message only to the server
+        const messageData = {
+            type: 'message',
+            text: message,
+            id: msgId
+        };
+        ws.send(JSON.stringify(messageData));
+
+        // Append the message to the UI on your side only
+        appendMessage(message, 'You', msgId);
+        document.getElementById('messageInput').value = '';
+    }
+}
+
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'message') {
+        // Append the received message from the server only if it's not from your side
+        if (data.sender !== 'You') {
+            appendMessage(data.text, data.sender, data.id);
         }
+    }
+};
+
 
         function appendMessage(text, sender, id) {
-            const messageElem = document.createElement('div');
-            messageElem.classList.add('message');
-            messageElem.innerHTML = `<strong>${sender}</strong>: ${text}`;
-            messagesContainer.appendChild(messageElem);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+    const messageElem = document.createElement('div');
+    messageElem.classList.add('message');
+    
+    // Add the sender's name and message text
+    messageElem.innerHTML = `
+        <strong>${sender}</strong>: ${text}
+    `;
+    
+    // Append the message to the messages container
+    messagesContainer.appendChild(messageElem);
+    
+    // Scroll to the bottom of the messages container
+    scrollToBottom();
+}
+
     </script>
 </body>
 </html>
