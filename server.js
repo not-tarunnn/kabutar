@@ -3,10 +3,13 @@ const WebSocket = require('ws');
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const Filter = require('bad-words'); // Import bad-words library
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+const filter = new Filter(); // Initialize the profanity filter
 
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -32,6 +35,17 @@ wss.on('connection', (ws) => {
             // Notify the user that they joined the room
             ws.send(JSON.stringify({ type: 'info', text: `Joined room ${code}` }));
         } else if (type === 'message') {
+            // Check for profanity
+            if (filter.isProfane(text)) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'error',
+                        text: 'Inappropriate language detected. Please keep it clean!',
+                    })
+                );
+                return; // Do not broadcast the profane message
+            }
+
             // Save the message and broadcast to all in the room
             const room = rooms[ws.roomCode];
             if (room) {
