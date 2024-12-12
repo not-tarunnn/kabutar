@@ -97,6 +97,14 @@
                 document.getElementById('messageInput').value = '';
             }
         }
+
+        // Add event listener for the 'Enter' key to send a message
+        document.getElementById('messageInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevents the Enter key from creating a new line
+                sendMessage(); // Calls the sendMessage function when Enter is pressed
+            }
+        });
     </script>
 </body>
 </html>
