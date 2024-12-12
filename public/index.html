@@ -48,6 +48,31 @@
 
         .message {
             margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 60%;
+        }
+
+        .message.sent {
+            background-color: #3b82f6;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .message.received {
+            background-color: #e5e7eb;
+            color: black;
+            align-self: flex-start;
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
         }
     </style>
 </head>
@@ -121,7 +146,8 @@
                     document.getElementById('videoChatBox').classList.remove('hidden');
                     startVideoCall();
                 } else if (data.type === 'message') {
-                    appendMessage(data.text);
+                    // Append the received message (on the left)
+                    appendMessage(data.text, false);
                 }
             };
 
@@ -173,23 +199,28 @@
         function sendMessage() {
             const message = document.getElementById('messageInput').value;
             if (message) {
-                // Send message only to the server
+                // Send message to the server
                 const messageData = {
                     type: 'message',
                     text: message
                 };
                 ws.send(JSON.stringify(messageData));
 
-                // Append the message to the UI on your side only
-                appendMessage(message);
-                document.getElementById('messageInput').value = '';
+                // Append the sent message to the UI (on the right)
+                appendMessage(message, true);
+                document.getElementById('messageInput').value = ''; // Clear input after sending
             }
         }
 
-        function appendMessage(text) {
+        function appendMessage(text, isSentByUser) {
             const messageElem = document.createElement('div');
             messageElem.classList.add('message');
-            messageElem.textContent = text; // Only show the message content
+            
+            // Add classes based on whether the message is sent or received
+            messageElem.classList.add(isSentByUser ? 'sent' : 'received');
+            messageElem.textContent = text;
+
+            // Append the message to the messages container
             messagesContainer.appendChild(messageElem);
 
             scrollToBottom();
