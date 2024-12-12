@@ -17,7 +17,6 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            transition: background-color 0.3s ease;
         }
 
         .chat-container {
@@ -25,33 +24,10 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        body.dark-mode {
-            background-color: #121212;
-        }
-
-        body.dark-mode .chat-container {
-            background-color: rgba(34, 34, 34, 0.9);
-            color: white;
-        }
-
-        body.dark-mode #localVideo, body.dark-mode #remoteVideo {
-            border: 2px solid #555;
-        }
-
-        body.dark-mode button {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        body.dark-mode button:hover {
-            background-color: #2563eb;
         }
 
         #localVideo, #remoteVideo {
-            width: 50%;
+            width: 60%;
             border: 2px solid #ddd;
         }
 
@@ -73,34 +49,16 @@
         .message {
             margin: 10px 0;
         }
-
-        /* Dark mode toggle button */
-        #darkModeBtn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #darkModeBtn:hover {
-            background-color: #2563eb;
-        }
-
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
-    <!-- Dark Mode Toggle Button -->
-    <button id="darkModeBtn" onclick="toggleDarkMode()">🌙 Dark Mode</button>
-
     <div class="chat-container w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Chat Section -->
         <div class="chat-container w-full flex flex-col">
+            <div class="mb-4">
+                <input id="username" class="w-full p-2 border rounded" placeholder="Enter your username" />
+            </div>
             <div class="mb-4">
                 <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
             </div>
@@ -133,7 +91,7 @@
     </div>
 
     <script>
-        let ws, localStream, peerConnection;
+        let ws, localStream, peerConnection, username;
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
         const cameraOffBtn = document.getElementById('cameraOffBtn');
@@ -146,16 +104,18 @@
         };
 
         function joinRoom() {
+            username = document.getElementById('username').value;
             const code = document.getElementById('roomCode').value;
-            if (!code || code.length !== 6) {
-                alert("Please enter a valid 6-digit code!");
+
+            if (!username || !code || code.length !== 6) {
+                alert("Please enter a valid username and 6-digit code!");
                 return;
             }
 
             ws = new WebSocket(`wss://kabutar.onrender.com`);
 
             ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'join', code }));
+                ws.send(JSON.stringify({ type: 'join', code, username }));
             };
 
             ws.onmessage = (event) => {
@@ -167,8 +127,6 @@
                     startVideoCall();
                 } else if (data.type === 'message') {
                     appendMessage(data.text, data.sender, data.id);
-                } else if (data.type === 'offer') {
-                    handleOffer(data.offer);
                 }
             };
 
@@ -221,35 +179,50 @@
             const message = document.getElementById('messageInput').value;
             if (message) {
                 const msgId = messageId++;
+                // Send message only to the server
                 const messageData = {
                     type: 'message',
                     text: message,
+                    sender: username,
                     id: msgId
                 };
                 ws.send(JSON.stringify(messageData));
 
+                // Append the message to the UI on your side only
                 appendMessage(message, 'You', msgId);
                 document.getElementById('messageInput').value = '';
             }
         }
 
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'message') {
+                // Append the received message from the server only if it's not from your side
+                if (data.sender !== username) {
+                    appendMessage(data.text, data.sender, data.id);
+                }
+            }
+        };
+
         function appendMessage(text, sender, id) {
             const messageElem = document.createElement('div');
             messageElem.classList.add('message');
-            messageElem.innerHTML = `<strong>${sender}</strong>: ${text}`;
+            
+            // Add the sender's name and message text
+            messageElem.innerHTML = `
+                <strong>${sender}</strong>: ${text}
+            `;
+            
+            // Append the message to the messages container
             messagesContainer.appendChild(messageElem);
+            
+            // Scroll to the bottom of the messages container
             scrollToBottom();
         }
 
         function scrollToBottom() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        // Dark Mode Toggle Function
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const darkModeButton = document.getElementById('darkModeBtn');
-            darkModeButton.textContent = document.body.classList.contains('dark-mode') ? '🌞 Light Mode' : '🌙 Dark Mode';
         }
     </script>
 </body>
