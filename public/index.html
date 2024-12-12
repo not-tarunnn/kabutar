@@ -27,7 +27,7 @@
         }
 
         #localVideo, #remoteVideo {
-            width: 60%;
+            width: 50%;
             border: 2px solid #ddd;
         }
 
@@ -224,6 +224,14 @@
         function scrollToBottom() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
+
+        // Add event listener to the message input for Enter key
+        document.getElementById('messageInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();  // Prevent the default Enter key behavior (which is a newline in the text box)
+                sendMessage();           // Call the sendMessage function
+            }
+        });
     </script>
 </body>
 </html>
