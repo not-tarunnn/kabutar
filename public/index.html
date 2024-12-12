@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     
     <style>
-        /* Set the background image to the local GIF file */
+        /* Set the background image */
         body {
             background-image: url('background.gif'); /* Reference the GIF in the same folder */
             background-size: cover; /* Make the GIF cover the whole page */
@@ -17,59 +17,119 @@
             background-attachment: fixed; /* Make the background stay fixed while scrolling */
         }
 
-        /* Add some styles to make the chat box stand out from the background */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 90vh;
+            padding: 20px;
+        }
+
+        /* Video Section */
+        .video-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 20px;
+        }
+
+        #localVideo, #remoteVideo {
+            width: 90%;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background-color: #000;
+        }
+
+        /* Chat Section */
         .chat-container {
-            background-color: rgba(255, 255, 255, 0.8); /* Add transparency to the container */
+            flex: 1;
+            max-width: 400px;
+            background-color: rgba(255, 255, 255, 0.8);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        #localVideo, #remoteVideo {
-            width: 45%;
-            margin: 10px;
-            border: 2px solid #ddd;
-        }
-        #controls {
-            margin-top: 20px;
-        }
+        /* Button Styling */
         button {
-            padding: 10px;
-            margin: 5px;
+            padding: 10px 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            outline: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #cameraOffBtn {
+            background-color: #3b82f6; /* Initial blue color */
+            color: white;
+        }
+
+        #cameraOffBtn:hover {
+            background-color: #2563eb;
+        }
+
+        #micOffBtn {
+            background-color: #22c55e; /* Initial green color */
+            color: white;
+        }
+
+        #micOffBtn:hover {
+            background-color: #16a34a;
+        }
+
+        .send-button {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .send-button:hover {
+            background-color: #16a34a;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body>
 
-    <div class="chat-container w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-4">Kabutar</h1>
-
-        <!-- Room Code Input -->
-        <div class="mb-4">
-            <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
-        </div>
-        <div class="text-center mb-4">
-            <button onclick="joinRoom()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Join Room</button>
-        </div>
-
-        <!-- Video Chat Section -->
-        <div id="videoChatBox" class="hidden">
-            <div id="videos" class="flex justify-between">
-                <video id="localVideo" autoplay muted></video>
-                <video id="remoteVideo" autoplay></video>
-            </div>
-            <div id="controls">
-                <button id="cameraOffBtn" onclick="toggleCamera()">Turn Camera Off</button>
-                <button id="micOffBtn" onclick="toggleMic()">Turn Mic Off</button>
+    <div class="container">
+        <!-- Video Section -->
+        <div class="video-section">
+            <video id="localVideo" autoplay muted></video>
+            <video id="remoteVideo" autoplay></video>
+            <div id="controls" class="flex justify-center">
+                <button id="cameraOffBtn" onclick="toggleCamera()" class="mx-2">Turn Camera Off</button>
+                <button id="micOffBtn" onclick="toggleMic()" class="mx-2">Turn Mic Off</button>
             </div>
         </div>
 
         <!-- Chat Section -->
-        <div id="chatBox" class="hidden">
-            <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
-            <div class="flex">
-                <input id="messageInput" class="flex-grow p-2 border rounded-l" placeholder="Type a message" />
-                <button onclick="sendMessage()" class="px-4 py-2 bg-green-500 text-white rounded-r hover:bg-green-600">Send</button>
+        <div class="chat-container">
+            <h1 class="text-2xl font-bold text-center mb-4">Kabutar</h1>
+
+            <!-- Room Code Input -->
+            <div class="mb-4">
+                <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
+            </div>
+            <div class="text-center mb-4">
+                <button onclick="joinRoom()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Join Room</button>
+            </div>
+
+            <!-- Chat Box -->
+            <div id="chatBox" class="hidden">
+                <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
+                <div class="flex">
+                    <input id="messageInput" class="flex-grow p-2 border rounded-l" placeholder="Type a message" />
+                    <button onclick="sendMessage()" class="send-button px-4 py-2 rounded-r">Send</button>
+                </div>
             </div>
         </div>
     </div>
@@ -101,7 +161,6 @@
 
                 if (data.type === 'info') {
                     document.getElementById('chatBox').classList.remove('hidden');
-                    document.getElementById('videoChatBox').classList.remove('hidden');
                     startVideoCall();
                 } else if (data.type === 'history') {
                     messages.innerHTML = '';
@@ -129,7 +188,6 @@
         }
 
         async function startVideoCall() {
-            // Get the local media stream (video and audio)
             localStream = await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true
@@ -137,33 +195,25 @@
 
             localVideo.srcObject = localStream;
 
-            // Initialize peer connection
             peerConnection = new RTCPeerConnection(configuration);
-
-            // Add local stream tracks to peer connection
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-            // When remote stream is added, display it
             peerConnection.ontrack = (event) => {
                 remoteVideo.srcObject = event.streams[0];
             };
 
-            // Create an offer to initiate the call
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
-            // Send the offer to the remote peer via WebSocket
             ws.send(JSON.stringify({ type: 'offer', offer }));
         }
 
-        // Toggle camera on/off
         function toggleCamera() {
             const tracks = localStream.getVideoTracks();
             tracks.forEach(track => track.enabled = !track.enabled);
             cameraOffBtn.textContent = tracks[0].enabled ? 'Turn Camera Off' : 'Turn Camera On';
         }
 
-        // Toggle mic on/off
         function toggleMic() {
             const tracks = localStream.getAudioTracks();
             tracks.forEach(track => track.enabled = !track.enabled);
@@ -177,14 +227,6 @@
                 document.getElementById('messageInput').value = '';
             }
         }
-
-        // Add event listener for the 'Enter' key to send a message
-        document.getElementById('messageInput').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevents the Enter key from creating a new line
-                sendMessage(); // Calls the sendMessage function when Enter is pressed
-            }
-        });
     </script>
 </body>
 </html>
