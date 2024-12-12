@@ -8,76 +8,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6676209672905473"
      crossorigin="anonymous"></script>
+    <style>
+        /* Set the background image to the local GIF file */
+        body {
+            background-image: url('background.gif'); /* Reference the GIF in the same folder */
+            background-size: cover; /* Make the GIF cover the whole page */
+            background-position: center; /* Center the GIF */
+            background-repeat: no-repeat; /* Prevent the GIF from repeating */
+            background-attachment: fixed; /* Make the background stay fixed while scrolling */
+        }
+
+        /* Add some styles to make the chat box stand out from the background */
+        .chat-container {
+            background-color: rgba(255, 255, 255, 0.8); /* Add transparency to the container */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-md p-4 bg-white rounded-lg shadow-md">
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="chat-container w-full max-w-md">
         <h1 class="text-2xl font-bold text-center mb-4">Kabutar - Simple Chat</h1>
         <div class="mb-4">
             <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
         </div>
         <div class="text-center mb-4">
-            <button onclick="joinRoom()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Join Room</button>
-        </div>
-        <div id="chatBox" class="hidden">
-            <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
-            <div class="flex">
-                <input id="messageInput" class="flex-grow p-2 border rounded-l" placeholder="Type a message" />
-                <button onclick="sendMessage()" class="px-4 py-2 bg-green-500 text-white rounded-r hover:bg-green-600">Send</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let ws;
-
-        function joinRoom() {
-            const code = document.getElementById('roomCode').value;
-
-            // Create WebSocket connection to your Render server
-            ws = new WebSocket(`wss://kabutar.onrender.com`);  // Replace with your Render WebSocket URL
-
-            ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'join', code }));
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const messages = document.getElementById('messages');
-                
-                if (data.type === 'info') {
-                    document.getElementById('chatBox').classList.remove('hidden');
-                } else if (data.type === 'history') {
-                    messages.innerHTML = '';
-                    data.messages.forEach((msg) => {
-                        const alignment = msg.sender === 'self' ? 'text-right' : 'text-left';
-                        messages.innerHTML += `<div class="${alignment} p-2 border-b">${msg.text}</div>`;
-                    });
-                    messages.scrollTop = messages.scrollHeight;
-                } else if (data.type === 'message') {
-                    const alignment = data.sender === 'self' ? 'text-right' : 'text-left';
-                    messages.innerHTML += `<div class="${alignment} p-2 border-b">${data.text}</div>`;
-                    messages.scrollTop = messages.scrollHeight;
-                }
-            };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket Error:', error);
-                alert('Failed to connect to the server. Please check the address and try again.');
-            };
-
-            ws.onclose = () => {
-                console.log('WebSocket connection closed');
-                alert('Connection closed. Please refresh the page to reconnect.');
-            };
-        }
-
-        function sendMessage() {
-            const text = document.getElementById('messageInput').value;
-            if (text.trim() !== '') {
-                ws.send(JSON.stringify({ type: 'message', text }));
-                document.getElementById('messageInput').value = '';
-            }
-        }
-    </script>
-</body>
-</html>
+            <button onclick="joinRoom()" class="px-4 p
