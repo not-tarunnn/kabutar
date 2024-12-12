@@ -6,6 +6,9 @@
     <title>Kabutar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+      <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
     
     <style>
         body {
@@ -24,7 +27,7 @@
         }
 
         #localVideo, #remoteVideo {
-            width: 100%;
+            width: 50%;
             border: 2px solid #ddd;
         }
 
@@ -43,66 +46,46 @@
             transform: scale(1.05);
         }
 
-        .typing-indicator {
-            color: #999;
-            font-style: italic;
-            display: none;
-        }
-
         .message {
             margin: 10px 0;
-        }
-
-        .message .read-receipt {
-            font-size: 12px;
-            color: #4caf50;
-        }
-
-        .message .unread {
-            color: #ff9800;
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
-    <div class="chat-container w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Video Section -->
-        <div class="flex flex-col items-center justify-center">
-            <h1 class="text-2xl font-bold text-center mb-4">Kabutar</h1>
-            <div id="videoChatBox" class="w-full flex justify-center mb-4">
-                <div id="videos" class="flex justify-between w-full md:w-4/5">
-                    <video id="localVideo" autoplay muted class="rounded-lg"></video>
-                    <video id="remoteVideo" autoplay class="rounded-lg"></video>
+    <div class="w-full max-w-7xl grid grid-cols-2 gap-4">
+        <!-- Chat Section -->
+        <div class="chat-container w-full flex flex-col">
+            <h1 class="text-2xl font-bold text-center mb-4">Chatbox</h1>
+            <div id="chatBox">
+                <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
+                <div class="flex">
+                    <input 
+                        id="messageInput" 
+                        class="flex-grow p-2 border rounded-l" 
+                        placeholder="Type a message" 
+                        onkeydown="handleEnterKey(event)" />
+                    <button 
+                        onclick="sendMessage()" 
+                        class="px-4 py-2 bg-green-500 text-white rounded-r hover:bg-green-600 transition-all duration-200">
+                        Send
+                    </button>
                 </div>
-            </div>
-            <div id="controls" class="flex justify-center gap-4">
-                <button id="cameraOffBtn" onclick="toggleCamera()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Turn Camera Off</button>
-                <button id="micOffBtn" onclick="toggleMic()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Turn Mic Off</button>
             </div>
         </div>
 
-        <!-- Chat Section -->
-        <div class="chat-container w-full flex flex-col">
-            <div class="mb-4">
-                <input id="roomCode" class="w-full p-2 border rounded" placeholder="Enter 6-digit code" />
-            </div>
-            <div class="text-center mb-4">
-                <button onclick="joinRoom()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Join Room</button>
-            </div>
-
-            <div id="chatBox" class="hidden">
-                <div id="messages" class="h-64 overflow-y-scroll border p-2 mb-4"></div>
-                <div class="flex">
-                    <input id="messageInput" class="flex-grow p-2 border rounded-l" placeholder="Type a message" oninput="sendTypingIndicator()" />
-                    <button onclick="sendMessage()" class="px-4 py-2 bg-green-500 text-white rounded-r hover:bg-green-600 transition-all duration-200">Send</button>
+        <!-- Video Section -->
+        <div class="flex flex-col items-center justify-center">
+            <h1 class="text-2xl font-bold text-center mb-4">Video</h1>
+            <div id="videoChatBox" class="w-full flex justify-end mb-4">
+                <div id="videos" class="w-4/5 flex flex-col">
+                    <video id="localVideo" autoplay muted class="rounded-lg mb-4"></video>
+                    <video id="remoteVideo" autoplay class="rounded-lg"></video>
                 </div>
-                <!-- Typing Indicator -->
-                <div id="typingIndicator" class="typing-indicator">User is typing...</div>
-                <!-- Media Sharing -->
-                <div class="mt-4">
-                    <input type="file" id="mediaInput" class="hidden" accept="image/*,video/*" />
-                    <button onclick="document.getElementById('mediaInput').click()" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-all duration-200">Share Media</button>
-                </div>
+            </div>
+            <div id="controls" class="flex justify-end gap-4">
+                <button id="cameraOffBtn" onclick="toggleCamera()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Turn Camera Off</button>
+                <button id="micOffBtn" onclick="toggleMic()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200">Turn Mic Off</button>
             </div>
         </div>
     </div>
@@ -113,9 +96,7 @@
         const remoteVideo = document.getElementById('remoteVideo');
         const cameraOffBtn = document.getElementById('cameraOffBtn');
         const micOffBtn = document.getElementById('micOffBtn');
-        const typingIndicator = document.getElementById('typingIndicator');
         const messagesContainer = document.getElementById('messages');
-        let typingTimeout;
         let messageId = 0;
 
         const configuration = {
@@ -135,23 +116,9 @@
                 const data = JSON.parse(event.data);
 
                 if (data.type === 'info') {
-                    document.getElementById('chatBox').classList.remove('hidden');
-                    document.getElementById('videoChatBox').classList.remove('hidden');
                     startVideoCall();
-                } else if (data.type === 'history') {
-                    data.messages.forEach((msg) => {
-                        appendMessage(msg.text, msg.sender, msg.id, msg.read);
-                    });
                 } else if (data.type === 'message') {
-                    appendMessage(data.text, data.sender, data.id, data.read);
-                } else if (data.type === 'typing') {
-                    typingIndicator.style.display = 'block';
-                    clearTimeout(typingTimeout);
-                    typingTimeout = setTimeout(() => {
-                        typingIndicator.style.display = 'none';
-                    }, 3000);
-                } else if (data.type === 'readReceipt') {
-                    markMessageAsRead(data.messageId);
+                    appendMessage(data.text, data.sender, data.id);
                 }
             };
 
@@ -207,56 +174,29 @@
                 const messageData = {
                     type: 'message',
                     text: message,
-                    id: msgId,
-                    read: false
+                    id: msgId
                 };
                 ws.send(JSON.stringify(messageData));
-                appendMessage(message, 'You', msgId, false);
+                appendMessage(message, 'You', msgId);
                 document.getElementById('messageInput').value = '';
             }
         }
 
-        function appendMessage(text, sender, id, read) {
+        function appendMessage(text, sender, id) {
             const messageElem = document.createElement('div');
             messageElem.classList.add('message');
             messageElem.innerHTML = `
                 <strong>${sender}</strong>: ${text}
-                <span class="${read ? 'read-receipt' : 'unread'}">${read ? '✔️ Read' : '❗ Unread'}</span>
             `;
             messagesContainer.appendChild(messageElem);
             scrollToBottom();
         }
 
-        function sendTypingIndicator() {
-            ws.send(JSON.stringify({ type: 'typing' }));
-        }
-
-        function sendReadReceipt(messageId) {
-            ws.send(JSON.stringify({ type: 'readReceipt', messageId }));
-        }
-
-        function markMessageAsRead(messageId) {
-            const messages = messagesContainer.getElementsByClassName('message');
-            for (let msg of messages) {
-                if (msg.innerText.includes(messageId)) {
-                    msg.querySelector('.unread').classList.add('read-receipt');
-                    msg.querySelector('.unread').innerText = '✔️ Read';
-                    break;
-                }
+        function handleEnterKey(event) {
+            if (event.key === "Enter") {
+                sendMessage();
             }
         }
-
-        document.getElementById('mediaInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function() {
-                    const base64 = reader.result;
-                    ws.send(JSON.stringify({ type: 'media', base64 }));
-                };
-                reader.readAsDataURL(file);
-            }
-        });
 
         function scrollToBottom() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
