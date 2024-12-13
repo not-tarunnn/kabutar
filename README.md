@@ -42,9 +42,8 @@ Welcome to **Kabutar**, a simple and secure messaging web app that lets you chat
 
 ## Technologies Used 🛠️
 
-- **Frontend**: server.js ⚛️
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB 🗃️
+- **Frontend**: index.html ⚛️
+- **Backend**: server.js
 
 ## License 📜
 
