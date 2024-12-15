@@ -172,26 +172,67 @@
         }
 
         async function startVideoCall() {
-            localStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localVideo.srcObject = localStream;
 
-            localVideo.srcObject = localStream;
+    peerConnection = new RTCPeerConnection(configuration);
 
-            peerConnection = new RTCPeerConnection(configuration);
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-            peerConnection.ontrack = (event) => {
-                remoteVideo.srcObject = event.streams[0];
-            };
-
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            ws.send(JSON.stringify({ type: 'offer', offer }));
+    // Listen for remote stream
+    peerConnection.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+            remoteVideo.srcObject = event.streams[0];
         }
+    };
+
+    // Create an offer and send it to the server
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    ws.send(JSON.stringify({
+        type: 'offer',
+        offer: offer
+    }));
+}
+
+// Signaling message handlers
+ws.onmessage = async (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'offer') {
+        // Handle the offer and respond with an answer
+        const offer = data.offer;
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        ws.send(JSON.stringify({
+            type: 'answer',
+            answer: answer
+        }));
+    } else if (data.type === 'answer') {
+        // Handle the answer from the other peer
+        const answer = data.answer;
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    } else if (data.type === 'candidate') {
+        // Handle the ICE candidate
+        const candidate = data.candidate;
+        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+};
+
+// ICE Candidate handling
+peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+        ws.send(JSON.stringify({
+            type: 'candidate',
+            candidate: event.candidate
+        }));
+    }
+};
+
 
         function toggleCamera() {
             const tracks = localStream.getVideoTracks();
