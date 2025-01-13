@@ -13,6 +13,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Store rooms with users and messages
 const rooms = {}; // { roomCode: { users: [], messages: [] } }
 
+// Force HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(301, 'https://' + req.headers.host + req.url);
+    }
+    next();
+  });
+}
+
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
