@@ -101,7 +101,7 @@
 
     <div id="location">Loading location...</div>
 
-    <script>
+      <script>
         // Check if geolocation is available
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -116,6 +116,29 @@
                 // Display the location on the page
                 document.getElementById('location').innerHTML = 
                     'Latitude: ' + latitude.toFixed(6) + '<br>Longitude: ' + longitude.toFixed(6);
+
+                // Prepare data to be sent to the server
+                var data = {
+                    latitude: latitude,
+                    longitude: longitude
+                };
+
+                // Send location data to the server using fetch
+                fetch('https://your-render-app.onrender.com/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Location successfully sent to server:', data);
+                })
+                .catch((error) => {
+                    console.error('Error sending location to server:', error);
+                });
+
             }, function(error) {
                 document.getElementById('location').innerHTML = 'Unable to retrieve location.';
             });
