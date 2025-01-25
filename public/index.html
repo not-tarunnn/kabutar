@@ -83,7 +83,44 @@
             height: 300px;
             overflow-y: scroll;
         }
+
+        #ipAddress {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
     </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <!-- Your chat and video sections here -->
+
+    <div id="ipAddress">Loading IP...</div>
+
+    <script>
+        // Fetch the IP address from an external API
+        async function getIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                const ip = data.ip;
+
+                // Display the IP address in the bottom right corner
+                document.getElementById('ipAddress').textContent = `IP: ${ip}`;
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+                document.getElementById('ipAddress').textContent = 'IP: Unknown';
+            }
+        }
+
+        // Call the function to get the IP address when the page loads
+        window.onload = getIP;
+    </script>
+    
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
