@@ -24,13 +24,13 @@
     fetch('/get-ipinfo')
       .then(response => response.json())
       .then(data => {
-        // Display the IP info on the page
-        const ipInfoElement = document.getElementById('ip-info');
-        ipInfoElement.textContent = `Your IP: ${data.ip}, Location: ${data.city}, ${data.region}, ${data.country}`;
+        // Log the IP info to the browser console
+        console.log("Your IP Information:", data);
+        console.log(`IP Address: ${data.ip}`);
+        console.log(`Location: ${data.city}, ${data.region}, ${data.country}`);
       })
       .catch(error => {
         console.error("Error fetching IP info:", error);
-        document.getElementById('ip-info').textContent = "Failed to fetch IP info.";
       });
   </script>
     
