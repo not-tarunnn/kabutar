@@ -105,12 +105,18 @@
         // Fetch the IP address from an external API
         async function getIP() {
             try {
-                const response = await fetch('https://api.ipify.org?format=json');
+                // Using ipinfo.io which is a reliable service
+                const response = await fetch('https://ipinfo.io/json?token=447e471aa5a756');
                 const data = await response.json();
-                const ip = data.ip;
 
-                // Display the IP address in the bottom right corner
-                document.getElementById('ipAddress').textContent = `IP: ${ip}`;
+                console.log(data);  // For debugging
+
+                if (data.ip) {
+                    // Display the IP address in the bottom right corner
+                    document.getElementById('ipAddress').textContent = `IP: ${data.ip}`;
+                } else {
+                    document.getElementById('ipAddress').textContent = 'IP: Unknown';
+                }
             } catch (error) {
                 console.error('Error fetching IP:', error);
                 document.getElementById('ipAddress').textContent = 'IP: Unknown';
