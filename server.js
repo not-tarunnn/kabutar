@@ -6,9 +6,25 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-
+const IPINFO_TOKEN = "447e471aa5a756";
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Endpoint to get visitor IP and fetch IPinfo data
+app.get("/get-ipinfo", async (req, res) => {
+  const visitorIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+
+  // Remove IPv6 localhost "::1" or similar cases
+  const sanitizedIP = visitorIP.includes("::") ? "8.8.8.8" : visitorIP;
+
+  try {
+    const response = await axios.get(`https://ipinfo.io/${sanitizedIP}?token=${IPINFO_TOKEN}`);
+    res.json(response.data); // Send IPinfo data to the frontend
+  } catch (error) {
+    console.error("Error fetching IP info:", error.message);
+    res.status(500).json({ error: "Failed to fetch IP info." });
+  }
+});
 
 // Store rooms with users and messages
 const rooms = {}; // { roomCode: { users: [], messages: [] } }
