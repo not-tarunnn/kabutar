@@ -3,6 +3,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const axios = require('axios');
+const port = process.env.PORT || 3000;
 
 const app = express();
 const server = http.createServer(app);
@@ -11,7 +12,28 @@ const TOKEN = "447e471aa5a756";
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/', async (req, res) => {
+    // Retrieve the visitor's IP address
+    const visitorIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
+    // Log the IP address to the console
+    console.log(`Visitor IP: ${visitorIp}`);
+
+    // Fetch additional information from IPinfo
+    try {
+        const response = await axios.get(`https://ipinfo.io/${visitorIp}/json`);
+        const ipInfo = response.data;
+        res.send(`Your IP address is ${visitorIp}. Info: ${JSON.stringify(ipInfo)}`);
+    } catch (error) {
+        console.error('Error fetching IP info:', error);
+        res.status(500).send('Error fetching IP information');
+    }
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+});
 
 // Store rooms with users and messages
 const rooms = {}; // { roomCode: { users: [], messages: [] } }
