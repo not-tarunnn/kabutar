@@ -83,42 +83,11 @@
             height: 300px;
             overflow-y: scroll;
         }
-
-        #ipAddress {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
     <!-- Your chat and video sections here -->
 
-    <div id="location"></div>
-
-    <script>
-    // Check if geolocation is available
-    if (navigator.geolocation) {
-        // Get the current position
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-
-            // Display the latitude and longitude
-            document.getElementById("location").innerHTML = `Latitude: ${latitude} <br> Longitude: ${longitude}`;
-        }, function(error) {
-            document.getElementById("location").innerHTML = "Error: " + error.message;
-        });
-    } else {
-        document.getElementById("location").innerHTML = "Geolocation is not supported by this browser.";
-    }
-</script>
-    
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
