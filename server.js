@@ -10,12 +10,19 @@ const wss = new WebSocket.Server({ server });
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route to handle location data from the client
+// POST endpoint to receive location data
 app.post('/api/location', (req, res) => {
+    // Destructure the latitude and longitude from the request body
     const { latitude, longitude } = req.body;
-    console.log(`Received location: Latitude: ${latitude}, Longitude: ${longitude}`);
-    
-    // Respond to client
+
+    if (!latitude || !longitude) {
+        return res.status(400).json({ error: 'Latitude and Longitude are required' });
+    }
+
+    // Log the received location data to the console
+    console.log(`Received location: Latitude ${latitude}, Longitude ${longitude}`);
+
+    // Respond to the client with a success message
     res.json({ message: 'Location received successfully!' });
 });
 
