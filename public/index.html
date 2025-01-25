@@ -83,7 +83,48 @@
             height: 300px;
             overflow-y: scroll;
         }
+
+         /* Style for the location display */
+        #location {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+        }
     </style>
+</head>
+<body>
+
+    <div id="location">Loading location...</div>
+
+    <script>
+        // Check if geolocation is available
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+
+                // Log location to the console
+                console.log("User's Location:");
+                console.log("Latitude: " + latitude.toFixed(6));
+                console.log("Longitude: " + longitude.toFixed(6));
+
+                // Display the location on the page
+                document.getElementById('location').innerHTML = 
+                    'Latitude: ' + latitude.toFixed(6) + '<br>Longitude: ' + longitude.toFixed(6);
+            }, function(error) {
+                document.getElementById('location').innerHTML = 'Unable to retrieve location.';
+            });
+        } else {
+            document.getElementById('location').innerHTML = 'Geolocation is not supported by this browser.';
+        }
+    </script>
+    
+
 </head>
 <body class="flex items-center justify-center min-h-screen">
     <!-- Your chat and video sections here -->
