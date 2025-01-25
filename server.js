@@ -10,6 +10,10 @@ const wss = new WebSocket.Server({ server });
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware to parse incoming JSON data
+app.use(express.json());  // This is necessary for parsing JSON requests
+
+
 // POST endpoint to receive location data
 app.post('/api/location', (req, res) => {
     // Destructure the latitude and longitude from the request body
