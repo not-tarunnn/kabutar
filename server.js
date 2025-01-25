@@ -10,6 +10,15 @@ const wss = new WebSocket.Server({ server });
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Route to handle location data from the client
+app.post('/api/location', (req, res) => {
+    const { latitude, longitude } = req.body;
+    console.log(`Received location: Latitude: ${latitude}, Longitude: ${longitude}`);
+    
+    // Respond to client
+    res.json({ message: 'Location received successfully!' });
+});
+
 // Store rooms with users and messages
 const rooms = {}; // { roomCode: { users: [], messages: [] } }
 
