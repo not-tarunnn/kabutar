@@ -11,10 +11,7 @@ const TOKEN = "447e471aa5a756";
 // Serve the client-side code (ensure your HTML, CSS, JS are in the 'public' directory)
 app.use(express.static(path.join(__dirname, 'public')));
 
-const request = await fetch("https://ipinfo.io/json?token=$TOKEN")
-const jsonResponse = await request.json()
 
-console.log(jsonResponse.ip, jsonResponse.country)
 
 // Store rooms with users and messages
 const rooms = {}; // { roomCode: { users: [], messages: [] } }
